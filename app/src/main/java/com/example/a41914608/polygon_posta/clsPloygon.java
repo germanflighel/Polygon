@@ -3,21 +3,28 @@ package com.example.a41914608.polygon_posta;
 import android.util.Log;
 import android.view.MotionEvent;
 
+import org.cocos2d.actions.base.Action;
+import org.cocos2d.actions.interval.Animate;
+import org.cocos2d.actions.interval.MoveBy;
+import org.cocos2d.actions.interval.MoveTo;
 import org.cocos2d.actions.interval.RotateBy;
 import org.cocos2d.actions.interval.ScaleBy;
 import org.cocos2d.actions.interval.ScaleTo;
 import org.cocos2d.layers.Layer;
+import org.cocos2d.nodes.Animation;
 import org.cocos2d.nodes.Director;
 import org.cocos2d.nodes.Scene;
 import org.cocos2d.nodes.Sprite;
 import org.cocos2d.opengl.CCGLSurfaceView;
 import org.cocos2d.types.CCSize;
 
+import java.util.ArrayList;
+import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
 /**
- * Created by 41914608 on 20/9/2016.
+ * Created by German Flighelman && Ivan PussyDestroyer on 20/9/2016.
  */
 public class clsPloygon {
 
@@ -29,11 +36,15 @@ public class clsPloygon {
     Sprite miPoligono;
     float DireccionDeRotacion;
     Timer Reloj;
+    Random miRandom = new Random();
+    ArrayList BolasDeFuego = new ArrayList();
+    int CantidadDeBolasDeFuego=0;
 
 
     public clsPloygon(CCGLSurfaceView vistaJuego) {
         Log.d("Constructor", "constructor del juego");
         _vistaJuego = vistaJuego;
+
 
 
     }
@@ -89,12 +100,13 @@ public class clsPloygon {
 
         Log.d("Escena", "Declaro e instancio la capa de Juego");
         CapaJuego MiCapaJuego = new CapaJuego();
-
         CapaDelJugador MiCapaJugador = new CapaDelJugador();
+        CapaDelEnemigo MiCapaEnemigo = new CapaDelEnemigo();
 
         Log.d("Escena", "Agrego las capas y las ordeno");
         miEscena.addChild(MiCapaJuego, 10);
         miEscena.addChild(MiCapaJugador,20);
+        miEscena.addChild(MiCapaEnemigo,30);
 
 
         Log.d("Escena", "Arme la Escena y la voy a devolver");
@@ -156,6 +168,11 @@ public class clsPloygon {
     }
 
     class CapaDelEnemigo extends Layer{
+
+        Animation AnimacionBola = new Animation
+                ("Bola",0.2f, "bola1.png", "bola2.png", "bola3.png", "bola4.png", "bola5.png", "bola6.png");
+
+
         public CapaDelEnemigo(){
             Log.d("Capa del Enemigo", "comienza constructor de capa del enemigo");
             PonerEnemigo();
@@ -164,8 +181,32 @@ public class clsPloygon {
         private void PonerEnemigo() {
             Sprite miEnemigo;
             miEnemigo = Sprite.sprite("enemigo.png");
-            miEnemigo.setPosition(Pantalla.width, Pantalla.height);
+            miEnemigo.setPosition(Pantalla.width/2, Pantalla.height/2);
+            miEnemigo.runAction(ScaleTo.action(0.01f,0.15f, 0.15f));
+            Disparar();
             super.addChild(miEnemigo,30);
+        }
+
+        private void Disparar(){
+            TimerTask miTarea = new TimerTask() {
+                @Override
+                public void run() {
+                    Sprite miBola = Sprite.sprite("bola1.png");
+                    Log.d("Dispara","Entra al timer");
+                    miBola.runAction(Animate.action(AnimacionBola));
+                    miBola.setPosition(Pantalla.width/2, Pantalla.height/2);
+                    miBola.runAction(MoveBy.action(0.5f,miRandom.nextFloat(),miRandom.nextFloat()));
+                    addChild(miBola,40);
+                    CantidadDeBolasDeFuego++;
+                    BolasDeFuego.add(miBola);
+                    float Pi =((float) Math.PI);
+                    Log.d("Log", "Pi: "+ Pi);
+                }
+            };
+            Reloj= new Timer();
+            Reloj.schedule(miTarea,0,1000);
+
+
         }
 
 
@@ -186,6 +227,7 @@ public class clsPloygon {
                 case 3:
                     Log.d("Poner Poligono", "Voy a Instanciar el Triangulo");
                     miPoligono = Sprite.sprite("triangulo.png");
+                    miPoligono.runAction(ScaleTo.action(0.01f,2f,2f));
                     miPoligono.setPosition(Pantalla.width/2, Pantalla.height/2);
                     Log.d("Poner Poligono", "Setee Posicion");
                     super.addChild(miPoligono, 20);
@@ -195,7 +237,7 @@ public class clsPloygon {
 
         }
 
-        private void Rotar( ){
+        private void Rotar(){
 
             TimerTask MantieneTouch = new TimerTask() {
                 @Override
@@ -204,7 +246,7 @@ public class clsPloygon {
                     if (MantieneTouchApretado) {
                         Log.d("Girando","El touch esta apretado, ahora va a rotar, X vale : "+ DireccionDeRotacion);
 
-                        miPoligono.runAction(RotateBy.action(0.001f, DireccionDeRotacion*4));
+                        miPoligono.runAction(RotateBy.action(0.01f, DireccionDeRotacion*4));
                     }
                 }
             };
@@ -255,4 +297,6 @@ public class clsPloygon {
             return true;
         }
     }
+
+
 }
